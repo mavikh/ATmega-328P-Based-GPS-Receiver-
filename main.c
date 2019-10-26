@@ -133,10 +133,6 @@ void display_date(){
 }
 
 int main(void){
-	//setvbuf(stdout, NULL, _IONBF, 0);
-	//setvbuf(stderr, NULL, _IONBF, 0);
-//	printf("!!!Hello World!!!");
-//	fflush(stdout);
 	TWI_init(); //initiatei2c
 	OLED_init();
 	USART_init();
@@ -150,14 +146,14 @@ int main(void){
 	OLED_write_text(6,(unsigned char *)"Date");
 	update_screen();
 
-/*-----------------------------------------------------------------------------
- * 										GPS
+/*-----------------------------------------------------------------------------*
+ *					GPS				       *
  *-----------------------------------------------------------------------------*/
 /*     Time       S Lat       P Long       P             Date
 $GPRMC,110831.000,A,1304.8763,N,07733.6457,E,0.79,303.84,010116,,,A*68
  */
 	while(1){
-	/*	GPS_data = USART_receive();
+		GPS_data = USART_receive();
 		if(GPS_data == '$'){
 			//beginning of data
 		}
@@ -198,12 +194,11 @@ $GPRMC,110831.000,A,1304.8763,N,07733.6457,E,0.79,303.84,010116,,,A*68
 			while(USART_receive() != ',')// Track made good, degrees true
 				GPS_date_buffer[buffer_index++] = USART_receive();
 			buffer_index = 0;
-		}*/
+		}
 		display_time();
 		display_latitude();
 		display_longitude();
 		display_date();
-		send_data_to_UART("Hello");
 	}
 	return 0;
 
