@@ -2,7 +2,7 @@
 #define	OLED64x128_H
 
 
-#define OLED_I2C_Add	0x78 
+#define OLED_I2C_Add		0x78 
 #define OLED_WIDTH		128
 #define OLED_HIGHTH		64
 #define OLED_pages		8
