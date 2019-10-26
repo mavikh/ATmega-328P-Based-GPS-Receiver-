@@ -2,12 +2,12 @@
 #define	OLED64x128_H
 
 
-#define OLED_I2C_Add	0x78 //OR7a OR3D Or 3c??
+#define OLED_I2C_Add	0x78 
 #define OLED_WIDTH		128
 #define OLED_HIGHTH		64
 #define OLED_pages		8
 #define OLED_BUFFERSIZE OLED_WIDTH*OLED_HIGHTH/8 //1024: number of total bytes (columns)
-												// each page:8rowx128column
+						// each page:8rowx128column
 #include <stdio.h>
 #include <string.h>
 
