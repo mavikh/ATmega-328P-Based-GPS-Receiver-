@@ -10,7 +10,7 @@
 #define F_I2C			100000UL// clock i2c
 #define PSC_I2C			1		// prescaler i2c
 #define SET_TWBR		(F_CPU/F_I2C-16UL)/(PSC_I2C*2UL)
-//#define SCL_CLOCK  		100000L///////////////
+
 /*
 #include <stdint.h>///
 #include <util/twi.h>///
