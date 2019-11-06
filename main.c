@@ -15,13 +15,14 @@
 #define BAUD_RATE	9600
 #define UBRR_Reg	(F_CPU/(16UL*BAUD_RATE))-1
 
-unsigned char GPS_data;
+unsigned char GPS_data, value;
 unsigned char GPS_time_buffer[10];
-unsigned char GPS_latitude_buffer[9], GPS_longitude_buffer[10];
-unsigned char GPS_speed_buffer[4];
-unsigned char latitude_dir, longitude_dir;  // N/S, E/W
+unsigned char GPS_latitude_buffer[9];
+unsigned char GPS_longitude_buffer[10];
+unsigned char GPS_speed_buffer[5];
 unsigned char GPS_track_buffer[6];
 unsigned char GPS_date_buffer[6];
+unsigned char latitude_dir, longitude_dir;
 int buffer_index = 0;
 bool idetifier_flag = 0;
 
@@ -77,21 +78,21 @@ void display_time(){
 	int hour, hour_tenth, hour_ones;
 	int row = 5;
 	/* Convert hour to local time */
-	hour = ((GPS_time_buffer[0])*10) + (GPS_time_buffer[1]);
+	hour = ((GPS_time_buffer[0]-48)*10) + (GPS_time_buffer[1]-48);
 	hour += 2; //local time
 	if(hour > 24)	hour = hour - 24;
 	hour_tenth = hour/10;
 	hour_ones = hour%10;
 	/* Hour */
-	write_character(0,row, hour_tenth+48);//48: ASCII code of 0
+	write_character(0,row, hour_tenth + 48);//48: ASCII code of 0
 	row ++;
-	write_character(0,row,hour_ones+48);
+	write_character(0,row,hour_ones + 48);
 	row ++;
 	write_character(0,row,58);//58: ASCII code of ":"
 	/* Minute and Second */
 	for (int k = 2; k < 6; k++){
 		row ++;
-		write_character(0,row,(GPS_time_buffer[k]+48));//48: ASCII code of 0
+		write_character(0,row,(GPS_time_buffer[k]/*+48*/));//48: ASCII code of 0
 		if(k == 3){
 			row ++;
 			write_character(0,row,58);//58: ASCII code of ":"
@@ -144,62 +145,105 @@ int main(void){
 	OLED_write_text(2,(unsigned char *)"Lati.");
 	OLED_write_text(4,(unsigned char *)"Long.");
 	OLED_write_text(6,(unsigned char *)"Date");
-	update_screen();
+//	update_screen();
 
-/*-----------------------------------------------------------------------------*
- *					GPS				       *
+/*-----------------------------------------------------------------------------
+ * 										GPS
  *-----------------------------------------------------------------------------*/
 /*     Time       S Lat       P Long       P             Date
 $GPRMC,110831.000,A,1304.8763,N,07733.6457,E,0.79,303.84,010116,,,A*68
  */
+
 	while(1){
+
 		GPS_data = USART_receive();
-		if(GPS_data == '$'){
-			//beginning of data
-		}
-		else if(GPS_data == 'C')//las letter of sentence identifier received
+
+		if(GPS_data == '$'){// beginning of data
+			while(GPS_data != 'C'){//GPRMC is received
+				GPS_data = USART_receive();
+			}
 			idetifier_flag = 1;
+		}
 		else if(GPS_data == ',' && idetifier_flag){
 			idetifier_flag = 0;
-			//int i = 0;
-		//	for(i = 0; i < ; i++)
-			//	GPS_time_buffer[i++] = GPS_data;
+
+			//Time:
 			GPS_data = USART_receive();// first byte of time
 			while(GPS_data != ','){
 				GPS_time_buffer[buffer_index++] = GPS_data;
 				GPS_data = USART_receive();
 			}
+
 			buffer_index = 0;
+
 			while(USART_receive() != ',');// skip Status
+
+			//Latitude:
 			GPS_data = USART_receive();// first byte of latitude
 			while(GPS_data != ','){
 				GPS_latitude_buffer[buffer_index++] = GPS_data;
 				GPS_data = USART_receive();
-			}
+			}//End of Latitude
 			buffer_index = 0;
+
+			//North or South:
 			latitude_dir = USART_receive();// N or S
 			GPS_data = USART_receive();// ,
-			while(USART_receive() != ','){// receive longitude
-				GPS_longitude_buffer[buffer_index++] = USART_receive();
-			}
+
+			//Longitude:
+			GPS_data = USART_receive();// first byte of longitude
+			while(GPS_data != ','){
+				GPS_longitude_buffer[buffer_index++] = GPS_data;
+				GPS_data = USART_receive();
+			}//End of Longitude
 			buffer_index = 0;
+
+			//East or West
 			longitude_dir = USART_receive();// E or W
 			GPS_data = USART_receive();// ,
-			while(USART_receive() != ',')// Speed over ground, knots
-				GPS_speed_buffer[buffer_index++] = USART_receive();
+
+			//Speed
+			GPS_data = USART_receive();// first byte of speed
+			while(GPS_data != ','){// Speed over ground, knots
+				GPS_speed_buffer[buffer_index++] = GPS_data;
+				GPS_data = USART_receive();
+			}
 			buffer_index = 0;
-			while(USART_receive() != ',')// Track made good, degrees true
-				GPS_track_buffer[buffer_index++] = USART_receive();
+
+			//Track
+			GPS_data = USART_receive();
+			while(GPS_data != ','){// Track made good, degrees true
+				GPS_track_buffer[buffer_index++] = GPS_data;
+				GPS_data = USART_receive();
+			}
 			buffer_index = 0;
-			while(USART_receive() != ',')// Track made good, degrees true
-				GPS_date_buffer[buffer_index++] = USART_receive();
+
+			//Date
+			GPS_data = USART_receive();// first byte of date
+			while(GPS_data != ','){// Date
+				GPS_date_buffer[buffer_index++] = GPS_data;
+				GPS_data = USART_receive();
+			}
 			buffer_index = 0;
-		}
-		display_time();
-		display_latitude();
-		display_longitude();
-		display_date();
+
+			display_time();
+			display_latitude();
+			display_longitude();
+			display_date();
+		}//,
 	}
+
 	return 0;
 
 }
+
+
+
+
+
+
+
+
+
+
+
